@@ -5,62 +5,55 @@
 #include <sys/wait.h>
 
 int main(int argc, char *argv[]) {
-
-    if((argc -1) <= 1 ) //only got one command cant do anything need at least 2
-    {
-        perror("Need at minimum 2 arguments to run\n");
-        exit(EXIT_FAILURE);
-
-    }
-    char *commands [argc-1];
-
+    
+    char *commands[argc - 1];
     for (int i = 1; i < argc; i++) {
-        commands[i - 1] = argv[i];
+        commands[i - 1] = argv[i]; //put the given user input in commands easier to track 
     }
 
     int pipe_fds[2];
-    pipe_fds[0] = 4;
-    pipe_fds[1] = 3;
+    pipe_fds[0] = 1;
+    pipe_fds[1] = 2;
 
-    for (int i = 0; i < argc-1; i++) {
-        int piped_results = pipe(pipe_fds);
-        if (piped_results == -1) {
-            perror("Pipe Failed, could not create Pipe\n");
+    for (int i = 0; i < argc - 1; i++) {
+        int result_fromPipe = pipe(pipe_fds);
+        if (result_fromPipe == -1) {
+            perror("Failed pipe creation\n");
             exit(EXIT_FAILURE);
         }
 
-        int child_pid = fork(); //tells us who is running.
-        if (child_pid == 0) { // we have a child process
-       
-            if (i == argc-1) {
+        int child_pid = fork(); //tells us whos running, we can alsop decide via wait command
+        if (child_pid == 0) {
+            // Child process
+            if (i == argc - 2) {
                 // Last process
                 if (execlp(commands[i], commands[i], NULL) == -1) {
-                    perror("Execlp command failed\n");
+                    perror("Execlp failed\n");
                     exit(EXIT_FAILURE);
                 }
             } else {
-                // Intermediate process
+                // middle process between parent and child
                 dup2(pipe_fds[1], STDOUT_FILENO);
                 close(pipe_fds[0]);
                 close(pipe_fds[1]);
                 if (execlp(commands[i], commands[i], NULL) == -1) {
-                    perror("Execlp command failed\n");
+                    perror("Execlp failed\n");
                     exit(EXIT_FAILURE);
                 }
             }
-        } else if (child_pid >= 1) {
-            // The Parent process
+        } else if (child_pid > 0) {
+            // Parent process
             int status;
             waitpid(child_pid, &status, 0);
             if (WEXITSTATUS(status) != 0) {
-                perror("Child proces Failed\n");
+                perror("Failed the child process\n");
                 exit(EXIT_FAILURE);
             }
             dup2(pipe_fds[0], STDIN_FILENO);
-            close(pipe_fds[0]); //need tp close both to ensure memory isnt leaked, best practice rn even when small program
+            close(pipe_fds[0]);
             close(pipe_fds[1]);
         } else {
-            perror("Fork command failed\n");
+            perror("Fork failed\n");
             exit(EXIT_FAILURE);
         }
     }
