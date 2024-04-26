@@ -1,17 +1,30 @@
-## UID: 123456789
+## UID: 506229579
 
 ## Pipe Up
 
-One sentence description
+This program aims to mimic the pipe command, by using fork, creating sub processes and then passing input within thesse process. 
 
 ## Building
+To build the program, we must first run the build process.
+Secondly, make sure the process is cleaned ny running make clean.
+Then run make.
 
-Explain briefly how to build your program
 
 ## Running
 
-Show an example run of your program, using at least two additional arguments, and what to expect
+./pipe ls sort
+ the output is: 
+ Makefile
+README.md
+__pycache__
+pipe
+pipe.c
+pipe.dSYM
+pipe.o
+test_lab1.py
 
 ## Cleaning up
 
-Explain briefly how to clean up all binary files
+make clean
+rm -rf __pycache__
+rm -rf pipe.dSYM
